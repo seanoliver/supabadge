@@ -1,4 +1,4 @@
-# Supabadge - Minimal Hackathon Implementation
+# Supabadge - MVP
 
 ## Overview
 
@@ -8,47 +8,48 @@ Supabadge generates live metrics badges for Supabase projects using their REST A
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Badge Wizard  │ -> │   Badge API     │ -> │ Supabase REST   │
-│   (Next.js)     │    │   (Next.js)     │    │      API        │
+│   Badge Wizard  │ -> │ Badge Storage   │    │ Supabase REST   │
+│ (Next.js/Vercel)│    │  (Our Database) │    │      API        │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │                        
-                              v                        
-                       ┌─────────────────┐             
-                       │ Badge Storage   │             
-                       │  (Our Database) │             
-                       └─────────────────┘             
+                              ↓                        ↑
+                       ┌─────────────────┐             │
+                       │  Edge Functions │ ────────────┘
+                       │ (Badge Serving) │
+                       └─────────────────┘
 ```
 
 **How it works:**
-1. User provides Supabase project URL and API keys
-2. We store API keys and badge config in our database
-3. Badge URLs (`/badge/{badge_id}`) call Supabase REST API and return SVG
-4. Much simpler than SQL - uses Supabase's built-in REST endpoints
+1. User provides Supabase project URL and API keys via Next.js UI (Vercel)
+2. We store API keys and badge config in our Supabase database
+3. Badge URLs served by Supabase Edge Functions (`/functions/v1/badge/{badge_id}`)
+4. Edge Functions call target project's REST API and generate SVG badges
 
 ## Project Structure
 
 ```
 supabadge/
-├── app/
+├── app/                                # Next.js UI (deployed to Vercel)
 │   ├── api/
-│   │   ├── badge/[id]/route.ts         # Badge serving endpoint
-│   │   └── setup/route.ts              # Badge creation
+│   │   └── setup/route.ts              # Badge creation endpoint
 │   ├── wizard/page.tsx                 # Simple 3-step wizard
 │   └── layout.tsx
 ├── components/
 │   ├── ui/                             # shadcn/ui components (already exists)
 │   ├── wizard/
 │   │   ├── ProjectSetup.tsx            # Project URL + API keys
-│   │   ├── MetricSelector.tsx          # Choose from 3 preset metrics
+│   │   ├── MetricSelector.tsx          # Choose from 2 preset metrics
 │   │   └── BadgeCustomizer.tsx         # Label and color only
 │   └── badge/
-│       └── SVGBadge.tsx                # Badge SVG generation
+│       └── BadgePreview.tsx            # Badge preview component
 ├── lib/
 │   ├── supabase.ts                     # Our Supabase client (already exists)
-│   ├── badge/
-│   │   ├── generator.ts                # SVG badge generation
-│   │   └── metrics.ts                  # 3 preset metrics using REST API
 │   └── database.ts                     # Database utilities
+├── supabase/
+│   └── functions/
+│       ├── badge/                      # Badge serving edge function
+│       │   └── index.ts                # Generates and serves SVG badges
+│       └── badge-refresh/              # Badge refresh edge function
+│           └── index.ts                # Updates user count badges
 └── sql/
     └── schema.sql                      # Simplified badge storage schema
 ```
@@ -56,7 +57,7 @@ supabadge/
 ## Database Schema (Our Supabase Project)
 
 ```sql
--- Simplified badge storage - only store anon keys for security
+-- Only store anon keys (not service keys)
 CREATE TABLE badges (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_url TEXT NOT NULL,
@@ -72,14 +73,15 @@ CREATE TABLE badges (
 ## Implementation Phases
 
 ### Phase 1: Core Setup (Day 1)
-- [x] Next.js 14 project with TypeScript and Tailwind (already exists)
+- [x] Next.js 14 project with TypeScript and Tailwind
 - [ ] Create badge storage schema in our Supabase project
 - [ ] Set up environment variables
 
 ### Phase 2: Badge Generation (Day 1)
-- [ ] Create simple SVG badge generator
-- [ ] Implement badge serving API at `/api/badge/[id]`
-- [ ] Create 3 preset metrics using Supabase REST API
+- [ ] Create simple SVG badge generator in edge function
+- [ ] Deploy badge serving edge function at `/functions/v1/badge/{id}`
+- [ ] Deploy badge refresh edge function at `/functions/v1/badge-refresh/{id}`
+- [ ] Create 2 preset metrics using Supabase REST API
 - [ ] Add basic error handling with "Offline" badge fallback
 
 ### Phase 3: Wizard Interface (Day 1-2)
@@ -113,30 +115,32 @@ export const PRESET_METRICS = {
 
 ## How It Works
 
-1. **Setup**: User provides Supabase project URL and anon key only
+1. **Setup**: User provides Supabase project URL and anon key via Next.js UI
 2. **Validation**: Test connection by calling `/rest/v1/` endpoint
-3. **Storage**: Store anon key and badge config (no sensitive keys stored)
-4. **Badge Generation**: 
+3. **Storage**: Store anon key and badge config in our database (no sensitive keys stored)
+4. **Badge Generation** (via Edge Functions):
    - **Table metrics**: Use stored anon key → dynamic badges
    - **User metrics**: User enters service key each time → manual refresh
-5. **Serving**: Badge URLs work forever for table metrics, require refresh for user metrics
+5. **Serving**: Edge Functions serve badges at `/functions/v1/badge/{id}`
 6. **Fallback**: If API fails, show "Offline" badge
 
-## Security (Much Better!)
+## Security
 
 - **Anon Keys**: Safe to store (meant to be public)
 - **Service Keys**: NEVER stored - user enters each time for auth metrics
-- **No SQL Injection**: Uses Supabase REST API only  
+- **No SQL Injection**: Uses Supabase REST API only
 - **Error Handling**: Show "Offline" badge if API fails
 - **Secure by Design**: Dynamic where safe, manual where sensitive
 
 ## API Endpoints
 
-### POST /api/setup
-Creates new badge
+### Next.js API (Vercel)
+
+#### POST /api/setup
+Creates new badge in database
 ```typescript
 // Request
-{ 
+{
   projectUrl: string,
   anonKey: string,
   label: string,
@@ -149,7 +153,9 @@ Creates new badge
 { badgeId: string, badgeUrl: string }
 ```
 
-### GET /api/badge/[id]
+### Supabase Edge Functions
+
+#### GET /functions/v1/badge/{id}
 Serves badge SVG (dynamic for table metrics)
 ```typescript
 // Response: SVG image with CORS headers
@@ -157,7 +163,7 @@ Serves badge SVG (dynamic for table metrics)
 // Access-Control-Allow-Origin: *
 ```
 
-### POST /api/badge/[id]/refresh
+#### POST /functions/v1/badge-refresh/{id}
 Refreshes user metric badges (requires service key)
 ```typescript
 // Request
@@ -177,19 +183,19 @@ Refreshes user metric badges (requires service key)
 ## Technology Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Next.js API routes, Supabase
+- **Backend**: Next.js API routes (Vercel), Supabase Edge Functions
 - **Database**: PostgreSQL (via Supabase)
-- **Deployment**: Vercel
+- **Badge Serving**: Supabase Edge Functions (Deno)
+- **Deployment**: Vercel (UI) + Supabase (Edge Functions)
 
 ## Key Files to Implement
 
-1. `app/api/badge/[id]/route.ts` - Badge serving logic
-2. `app/api/setup/route.ts` - Badge creation endpoint
-3. `app/wizard/page.tsx` - Simple 3-step wizard
-4. `components/wizard/` - Three wizard components  
-5. `lib/badge/generator.ts` - SVG generation with fallback
-6. `lib/badge/metrics.ts` - 2 preset metrics using REST API
-7. `sql/schema.sql` - Simple badge storage schema
+1. `supabase/functions/badge/index.ts` - Badge serving edge function
+2. `supabase/functions/badge-refresh/index.ts` - Badge refresh edge function
+3. `app/api/setup/route.ts` - Badge creation endpoint (Next.js)
+4. `app/wizard/page.tsx` - Simple 3-step wizard
+5. `components/wizard/` - Three wizard components
+6. `sql/schema.sql` - Simple badge storage schema
 
 ## Setup Instructions for Users
 
@@ -203,4 +209,3 @@ To use Supabadge with your Supabase project:
 **Security Benefits:**
 - Only anon keys are stored (meant to be public anyway)
 - Service keys never stored - you enter them only when refreshing
-- Perfect balance of convenience and security!
