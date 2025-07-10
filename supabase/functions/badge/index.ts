@@ -48,12 +48,14 @@ function generateOfflineSVG(label: string): string {
 }
 
 async function fetchTableCount(projectUrl: string, anonKey: string, tableName: string): Promise<number> {
-  const url = `${projectUrl}/rest/v1/${tableName}?select=*&head=true&prefer=count=exact`;
+  const url = `${projectUrl}/rest/v1/${tableName}?select=*`;
   
   const response = await fetch(url, {
+    method: 'HEAD',
     headers: {
       'apikey': anonKey,
       'Authorization': `Bearer ${anonKey}`,
+      'Prefer': 'count=exact',
     },
   });
 
@@ -66,12 +68,13 @@ async function fetchTableCount(projectUrl: string, anonKey: string, tableName: s
     throw new Error('No content-range header found');
   }
 
-  const match = contentRange.match(/\d+\/(\d+)/);
+  // Handle both "0-9/10" and "*/0" formats
+  const match = contentRange.match(/(\d+|\*)\/(\d+)/);
   if (!match) {
     throw new Error('Invalid content-range format');
   }
 
-  return parseInt(match[1], 10);
+  return parseInt(match[2], 10);
 }
 
 async function fetchUserCount(projectUrl: string, serviceKey: string): Promise<number> {
