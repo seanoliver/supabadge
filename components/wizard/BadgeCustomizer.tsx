@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BadgePreview } from "@/components/badge/BadgePreview";
 import { ArrowLeft, Loader2, Copy, CheckCircle } from "lucide-react";
-import { PRESET_METRICS } from "@/lib/metrics";
+import { PRESET_METRICS, PRESET_COLORS } from "@/lib/metrics";
 
 interface BadgeCustomizerProps {
   onBack: () => void;
@@ -22,7 +22,7 @@ interface BadgeCustomizerProps {
 export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
   const metric = PRESET_METRICS[projectData.metricType];
   const [label, setLabel] = useState(metric.label);
-  const [color, setColor] = useState("#4F46E5");
+  const [color, setColor] = useState("#3ECF8E");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
   const [badgeUrl, setBadgeUrl] = useState("");
@@ -158,20 +158,39 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
 
         <div>
           <Label htmlFor="color">Badge Color</Label>
-          <div className="mt-1 flex space-x-2">
-            <Input
-              id="color"
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="h-10 w-20"
-            />
-            <Input
-              type="text"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="flex-1"
-            />
+          <div className="mt-2 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {PRESET_COLORS.map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setColor(preset.value)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                    color === preset.value
+                      ? "ring-2 ring-offset-2 ring-gray-900"
+                      : "hover:scale-105"
+                  }`}
+                  style={{ backgroundColor: preset.value, color: "white" }}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex space-x-2">
+              <Input
+                id="color"
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-10 w-20"
+              />
+              <Input
+                type="text"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="flex-1"
+              />
+            </div>
           </div>
         </div>
       </div>

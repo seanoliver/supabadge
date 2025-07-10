@@ -26,3 +26,13 @@ export const PRESET_METRICS: Record<string, PresetMetric> = {
     dynamic: false
   }
 };
+
+export const PRESET_COLORS = [
+  { label: "Supabase Green", value: "#3ECF8E" },
+  { label: "Blue", value: "#4F46E5" },
+  { label: "Green", value: "#10B981" },
+  { label: "Red", value: "#EF4444" },
+  { label: "Yellow", value: "#F59E0B" },
+  { label: "Purple", value: "#8B5CF6" },
+  { label: "Pink", value: "#EC4899" },
+];

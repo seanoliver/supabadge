@@ -17,9 +17,10 @@ interface Badge {
 }
 
 function generateSVG(label: string, value: string, color: string): string {
+  const iconWidth = 20;
   const labelWidth = label.length * 7 + 10;
   const valueWidth = value.length * 7 + 10;
-  const totalWidth = labelWidth + valueWidth;
+  const totalWidth = iconWidth + labelWidth + valueWidth;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="20">
     <linearGradient id="b" x2="0" y2="100%">
@@ -30,15 +31,19 @@ function generateSVG(label: string, value: string, color: string): string {
       <rect width="${totalWidth}" height="20" rx="3" fill="#fff"/>
     </mask>
     <g mask="url(#a)">
-      <rect width="${labelWidth}" height="20" fill="#555"/>
-      <rect x="${labelWidth}" width="${valueWidth}" height="20" fill="${color}"/>
+      <rect width="${iconWidth + labelWidth}" height="20" fill="#555"/>
+      <rect x="${iconWidth + labelWidth}" width="${valueWidth}" height="20" fill="${color}"/>
       <rect width="${totalWidth}" height="20" fill="url(#b)"/>
     </g>
-    <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-      <text x="${labelWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${label}</text>
-      <text x="${labelWidth / 2}" y="14">${label}</text>
-      <text x="${labelWidth + valueWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${value}</text>
-      <text x="${labelWidth + valueWidth / 2}" y="14">${value}</text>
+    <g fill="#fff">
+      <!-- Simplified Supabase icon -->
+      <path d="M 6 4 L 14 4 L 14 12 L 10 16 L 6 12 Z" fill="#3ECF8E" opacity="0.9" transform="scale(0.7) translate(4, 3)"/>
+      <text text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+        <text x="${iconWidth + labelWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${label}</text>
+        <text x="${iconWidth + labelWidth / 2}" y="14">${label}</text>
+        <text x="${iconWidth + labelWidth + valueWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${value}</text>
+        <text x="${iconWidth + labelWidth + valueWidth / 2}" y="14">${value}</text>
+      </text>
     </g>
   </svg>`;
 }
