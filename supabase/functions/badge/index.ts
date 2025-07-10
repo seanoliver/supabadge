@@ -38,12 +38,12 @@ function generateSVG(label: string, value: string, color: string): string {
     <g fill="#fff">
       <!-- Simplified Supabase icon -->
       <path d="M 6 4 L 14 4 L 14 12 L 10 16 L 6 12 Z" fill="#3ECF8E" opacity="0.9" transform="scale(0.7) translate(4, 3)"/>
-      <text text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-        <text x="${iconWidth + labelWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${label}</text>
-        <text x="${iconWidth + labelWidth / 2}" y="14">${label}</text>
-        <text x="${iconWidth + labelWidth + valueWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${value}</text>
-        <text x="${iconWidth + labelWidth + valueWidth / 2}" y="14">${value}</text>
-      </text>
+    </g>
+    <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+      <text x="${iconWidth + labelWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${label}</text>
+      <text x="${iconWidth + labelWidth / 2}" y="14">${label}</text>
+      <text x="${iconWidth + labelWidth + valueWidth / 2}" y="15" fill="#010101" fill-opacity=".3">${value}</text>
+      <text x="${iconWidth + labelWidth + valueWidth / 2}" y="14">${value}</text>
     </g>
   </svg>`;
 }

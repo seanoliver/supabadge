@@ -16,7 +16,6 @@ export function BadgePreview({ label, value, color }: BadgePreviewProps) {
         xmlns="http://www.w3.org/2000/svg"
         width={totalWidth}
         height="20"
-        className="scale-150"
       >
         <linearGradient id="b" x2="0" y2="100%">
           <stop offset="0" stopColor="#bbb" stopOpacity=".1" />
@@ -38,28 +37,24 @@ export function BadgePreview({ label, value, color }: BadgePreviewProps) {
             opacity="0.9" 
             transform="scale(0.7) translate(4, 3)"
           />
+        </g>
+        <g fill="#fff" textAnchor="middle" fontFamily="DejaVu Sans,Verdana,Geneva,sans-serif" fontSize="11">
+          <text x={iconWidth + labelWidth / 2} y="15" fill="#010101" fillOpacity=".3">
+            {label}
+          </text>
+          <text x={iconWidth + labelWidth / 2} y="14">
+            {label}
+          </text>
           <text
-            textAnchor="middle"
-            fontFamily="DejaVu Sans,Verdana,Geneva,sans-serif"
-            fontSize="11"
+            x={iconWidth + labelWidth + valueWidth / 2}
+            y="15"
+            fill="#010101"
+            fillOpacity=".3"
           >
-            <text x={iconWidth + labelWidth / 2} y="15" fill="#010101" fillOpacity=".3">
-              {label}
-            </text>
-            <text x={iconWidth + labelWidth / 2} y="14">
-              {label}
-            </text>
-            <text
-              x={iconWidth + labelWidth + valueWidth / 2}
-              y="15"
-              fill="#010101"
-              fillOpacity=".3"
-            >
-              {value}
-            </text>
-            <text x={iconWidth + labelWidth + valueWidth / 2} y="14">
-              {value}
-            </text>
+            {value}
+          </text>
+          <text x={iconWidth + labelWidth + valueWidth / 2} y="14">
+            {value}
           </text>
         </g>
       </svg>
