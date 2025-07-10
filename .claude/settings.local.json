@@ -1,6 +1,13 @@
 {
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(git checkout:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
