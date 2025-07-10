@@ -3,7 +3,8 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "WebFetch(domain:supabase.com)"
     ]
   },
   "enableAllProjectMcpServers": true,
