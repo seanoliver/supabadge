@@ -11,6 +11,7 @@ type WizardStep = "project" | "metric" | "customize";
 interface WizardData {
   projectUrl: string;
   anonKey: string;
+  serviceKey: string;
   metricType: string;
   tableName?: string;
 }
@@ -19,7 +20,7 @@ export default function WizardPage() {
   const [step, setStep] = useState<WizardStep>("project");
   const [data, setData] = useState<Partial<WizardData>>({});
 
-  const handleProjectNext = (projectData: { projectUrl: string; anonKey: string }) => {
+  const handleProjectNext = (projectData: { projectUrl: string; anonKey: string; serviceKey: string }) => {
     setData({ ...data, ...projectData });
     setStep("metric");
   };
@@ -81,8 +82,8 @@ export default function WizardPage() {
             <ProjectSetup
               onNext={handleProjectNext}
               initialData={
-                data.projectUrl && data.anonKey
-                  ? { projectUrl: data.projectUrl, anonKey: data.anonKey }
+                data.projectUrl && data.anonKey && data.serviceKey
+                  ? { projectUrl: data.projectUrl, anonKey: data.anonKey, serviceKey: data.serviceKey }
                   : undefined
               }
             />
@@ -95,6 +96,11 @@ export default function WizardPage() {
               initialData={
                 data.metricType
                   ? { metricType: data.metricType, tableName: data.tableName }
+                  : undefined
+              }
+              projectData={
+                data.projectUrl && data.anonKey && data.serviceKey
+                  ? { projectUrl: data.projectUrl, anonKey: data.anonKey, serviceKey: data.serviceKey }
                   : undefined
               }
             />

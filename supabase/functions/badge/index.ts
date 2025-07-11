@@ -53,15 +53,32 @@ function generateOfflineSVG(label: string): string {
 }
 
 async function fetchTableCount(projectUrl: string, anonKey: string, tableName: string): Promise<number> {
-  const url = `${projectUrl}/rest/v1/${tableName}?select=*`;
+  // Handle schema.table format
+  let schema = 'public';
+  let table = tableName;
+  
+  if (tableName.includes('.')) {
+    const parts = tableName.split('.');
+    schema = parts[0];
+    table = parts[1];
+  }
+  
+  // For non-public schemas, we need to set the schema in headers
+  const headers: Record<string, string> = {
+    'apikey': anonKey,
+    'Authorization': `Bearer ${anonKey}`,
+    'Prefer': 'count=exact',
+  };
+  
+  if (schema !== 'public') {
+    headers['Accept-Profile'] = schema;
+  }
+  
+  const url = `${projectUrl}/rest/v1/${table}?select=*`;
   
   const response = await fetch(url, {
     method: 'HEAD',
-    headers: {
-      'apikey': anonKey,
-      'Authorization': `Bearer ${anonKey}`,
-      'Prefer': 'count=exact',
-    },
+    headers,
   });
 
   if (!response.ok) {
