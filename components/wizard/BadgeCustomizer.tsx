@@ -125,7 +125,7 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
                   </p>
                   <div className="mt-3 space-y-2">
                     <p className="text-sm font-medium text-amber-900">To refresh the count:</p>
-                    <pre className="overflow-x-auto rounded bg-amber-100 p-2 text-xs">
+                    <pre className="overflow-x-auto rounded bg-amber-100 p-3 text-xs font-mono whitespace-pre-wrap break-all">
 {`curl -X POST ${refreshUrl} \\
   -H "Content-Type: application/json" \\
   -d '{"serviceKey": "your-service-key"}'`}
