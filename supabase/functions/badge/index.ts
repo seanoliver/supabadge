@@ -5,7 +5,7 @@ declare const Deno: {
   };
 };
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 // Inline the badge generation function since we can't import from lib in edge functions
@@ -65,6 +65,7 @@ async function fetchTableCount(projectUrl: string, anonKey: string, tableName: s
   // Handle schema.table format
   let schema = 'public';
   let table = tableName;
+
 
   if (tableName.includes('.')) {
     const parts = tableName.split('.');
@@ -147,8 +148,20 @@ Deno.serve(async (req) => {
 
     try {
       if (badge.metric_type === 'table_count' && badge.table_name) {
-        const count = await fetchTableCount(badge.project_url, badge.anon_key, badge.table_name);
-        value = count.toLocaleString();
+        // Always prioritize cached value if it exists
+        if (badge.cached_value !== null && badge.cached_value !== undefined && badge.cached_value !== '') {
+          value = parseInt(badge.cached_value).toLocaleString();
+        } else {
+          // Otherwise fetch dynamically
+          try {
+            const count = await fetchTableCount(badge.project_url, badge.anon_key, badge.table_name);
+            value = count.toLocaleString();
+          } catch (fetchError) {
+            console.error('Dynamic fetch failed:', fetchError);
+            // If dynamic fetch fails and we somehow still don't have cached value, show offline
+            value = "Offline";
+          }
+        }
       } else if (badge.metric_type === 'users') {
         // For user metrics, we would need the service key passed in the request
         // For now, return a placeholder since this requires manual refresh
@@ -158,7 +171,12 @@ Deno.serve(async (req) => {
       }
     } catch (error) {
       console.error('Error fetching metric:', error);
-      value = "Offline";
+      // If we have a cached value and fetch fails, use the cached value
+      if (badge.cached_value) {
+        value = parseInt(badge.cached_value).toLocaleString();
+      } else {
+        value = "Offline";
+      }
     }
 
     const svg = generateBadgeSVG(badge.label, value, badge.color);

@@ -14,6 +14,7 @@ interface BadgeCustomizerProps {
   projectData: {
     projectUrl: string;
     anonKey: string;
+    serviceKey: string;
     metricType: string;
     tableName?: string;
   };
@@ -27,6 +28,7 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
   const [error, setError] = useState("");
   const [badgeUrl, setBadgeUrl] = useState("");
   const [refreshUrl, setRefreshUrl] = useState("");
+  const [hasRLS, setHasRLS] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +43,11 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...projectData,
+          projectUrl: projectData.projectUrl,
+          anonKey: projectData.anonKey,
+          serviceRoleKey: projectData.serviceKey,
+          metricType: projectData.metricType,
+          tableName: projectData.tableName,
           label,
           color,
         }),
@@ -52,12 +58,12 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
         throw new Error(data.error || "Failed to create badge");
       }
 
-      const { badgeId, badgeUrl: url } = await response.json();
+      const { badgeId, badgeUrl: url, hasRLS: rlsDetected, refreshUrl: refresh } = await response.json();
       setBadgeUrl(url);
-
-      if (projectData.metricType === "users") {
-        const baseUrl = url.replace("/badge/", "/badge-refresh/");
-        setRefreshUrl(baseUrl);
+      setHasRLS(rlsDetected);
+      
+      if (refresh) {
+        setRefreshUrl(refresh);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create badge");
@@ -106,10 +112,26 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
           </div>
 
           {refreshUrl && (
-            <Alert>
+            <Alert className="border-amber-200 bg-amber-50">
               <AlertDescription>
-                <strong>Manual Refresh Required:</strong> User count badges need to be refreshed manually.
-                POST your service key to: <code className="text-xs">{refreshUrl}</code>
+                <div className="space-y-2">
+                  <p className="font-semibold text-amber-900">
+                    {hasRLS ? "RLS-Protected Table" : "Manual Refresh Required"}
+                  </p>
+                  <p className="text-sm text-amber-800">
+                    {hasRLS 
+                      ? "This table has Row Level Security enabled. The badge shows a cached count that must be refreshed manually."
+                      : "User count badges need to be refreshed manually."}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-sm font-medium text-amber-900">To refresh the count:</p>
+                    <pre className="overflow-x-auto rounded bg-amber-100 p-2 text-xs">
+{`curl -X POST ${refreshUrl} \\
+  -H "Content-Type: application/json" \\
+  -d '{"serviceKey": "your-service-key"}'`}
+                    </pre>
+                  </div>
+                </div>
               </AlertDescription>
             </Alert>
           )}

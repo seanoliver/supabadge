@@ -14,6 +14,7 @@ interface Badge {
   metric_type: string;
   table_name?: string;
   color: string;
+  cached_value?: string;
 }
 
 interface RefreshRequest {
@@ -74,6 +75,51 @@ async function fetchUserCount(projectUrl: string, serviceKey: string): Promise<n
   return users.length;
 }
 
+async function fetchTableCount(projectUrl: string, serviceKey: string, tableName: string): Promise<number> {
+  // Handle schema.table format
+  let schema = 'public';
+  let table = tableName;
+
+  if (tableName.includes('.')) {
+    const parts = tableName.split('.');
+    schema = parts[0];
+    table = parts[1];
+  }
+
+  const headers: Record<string, string> = {
+    'apikey': serviceKey,
+    'Authorization': `Bearer ${serviceKey}`,
+    'Prefer': 'count=exact',
+  };
+
+  if (schema !== 'public') {
+    headers['Accept-Profile'] = schema;
+  }
+
+  const url = `${projectUrl}/rest/v1/${table}?select=*&limit=0`;
+
+  const response = await fetch(url, {
+    method: 'HEAD',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch table count: ${response.status}`);
+  }
+
+  const contentRange = response.headers.get('content-range');
+  if (!contentRange) {
+    throw new Error('No content-range header found');
+  }
+
+  const match = contentRange.match(/(\d+|\*)\/(\d+)/);
+  if (!match) {
+    throw new Error('Invalid content-range format');
+  }
+
+  return parseInt(match[2], 10);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -127,22 +173,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (badge.metric_type !== 'users') {
-      return new Response(generateErrorSVG(badge.label, 'Invalid Metric'), {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'image/svg+xml',
-        },
-      });
-    }
-
     let value: string;
 
     try {
-      const count = await fetchUserCount(badge.project_url, serviceKey);
-      value = count.toLocaleString();
+      if (badge.metric_type === 'users') {
+        const count = await fetchUserCount(badge.project_url, serviceKey);
+        value = count.toLocaleString();
+      } else if (badge.metric_type === 'table_count' && badge.table_name && badge.cached_value) {
+        // This is an RLS-protected table, update the count
+        const count = await fetchTableCount(badge.project_url, serviceKey, badge.table_name);
+        value = count.toLocaleString();
+        
+        // Update the cached value in the database
+        const { error: updateError } = await supabase
+          .from('badges')
+          .update({ cached_value: count.toString() })
+          .eq('id', badgeId);
+          
+        if (updateError) {
+          console.error('Error updating cached value:', updateError);
+        }
+      } else {
+        return new Response(generateErrorSVG(badge.label, 'Invalid Metric'), {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'image/svg+xml',
+          },
+        });
+      }
     } catch (error) {
-      console.error('Error fetching user count:', error);
+      console.error('Error fetching count:', error);
       return new Response(generateErrorSVG(badge.label, 'Auth Failed'), {
         headers: {
           ...corsHeaders,

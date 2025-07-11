@@ -4,7 +4,10 @@
     "allow": [
       "Bash(find:*)",
       "Bash(git checkout:*)",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "mcp__supabase__deploy_edge_function",
+      "Bash(curl:*)",
+      "Bash(git add:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

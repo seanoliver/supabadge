@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectUrl, anonKey, label, metricType, tableName, color } = body;
+    const { projectUrl, anonKey, label, metricType, tableName, color, serviceRoleKey } = body;
 
     // Validate required fields
     if (!projectUrl || !anonKey || !label || !metricType) {
@@ -45,6 +45,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let cachedValue = null;
+    
+    // For table_count metrics, check if RLS is enabled and get initial count
+    if (metricType === 'table_count' && tableName) {
+      // First try with anon key to see if we get a count
+      const anonCountUrl = `${projectUrl}/rest/v1/${tableName}?select=*&limit=0`;
+      const anonResponse = await fetch(anonCountUrl, {
+        method: 'HEAD',
+        headers: {
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+          'Prefer': 'count=exact',
+        },
+      });
+
+      const anonCount = anonResponse.headers.get('content-range')?.split('/')[1] || '0';
+      
+      // If service role key provided, get the actual count
+      if (serviceRoleKey) {
+        const serviceCountUrl = `${projectUrl}/rest/v1/${tableName}?select=*&limit=0`;
+        const serviceResponse = await fetch(serviceCountUrl, {
+          method: 'HEAD',
+          headers: {
+            'apikey': serviceRoleKey,
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'Prefer': 'count=exact',
+          },
+        });
+
+        const serviceCount = serviceResponse.headers.get('content-range')?.split('/')[1] || '0';
+        
+        // If counts differ, RLS is likely enabled, so cache the service role count
+        if (anonCount !== serviceCount) {
+          cachedValue = serviceCount;
+        }
+      }
+    }
+
     // Create the badge in our database
     const supabase = await createClient();
     
@@ -57,6 +95,7 @@ export async function POST(request: NextRequest) {
         metric_type: metricType,
         table_name: tableName || null,
         color: color || '#4F46E5',
+        cached_value: cachedValue,
       })
       .select()
       .single();
@@ -76,6 +115,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       badgeId: data.id,
       badgeUrl,
+      hasRLS: !!cachedValue,
+      refreshUrl: cachedValue ? `${supabaseUrl}/functions/v1/badge-refresh/${data.id}` : null,
     });
   } catch (error) {
     console.error('Error in badge setup:', error);
