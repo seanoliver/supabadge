@@ -30,6 +30,8 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
   const [refreshUrl, setRefreshUrl] = useState("");
   const [hasRLS, setHasRLS] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedCurl, setCopiedCurl] = useState(false);
+  const [copiedMarkdown, setCopiedMarkdown] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,10 +74,18 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
     }
   };
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, type: 'badge' | 'curl' | 'markdown' = 'badge') => {
     await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (type === 'badge') {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } else if (type === 'curl') {
+      setCopiedCurl(true);
+      setTimeout(() => setCopiedCurl(false), 2000);
+    } else if (type === 'markdown') {
+      setCopiedMarkdown(true);
+      setTimeout(() => setCopiedMarkdown(false), 2000);
+    }
   };
 
   if (badgeUrl) {
@@ -124,7 +134,22 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
                       : "User count badges need to be refreshed manually."}
                   </p>
                   <div className="mt-3 space-y-2">
-                    <p className="text-sm font-medium text-amber-900">To refresh the count:</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-amber-900">To refresh the count:</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(`curl -X POST ${refreshUrl} \\\n  -H "Content-Type: application/json" \\\n  -d '{"serviceKey": "your-service-key"}'`, 'curl')}
+                        className="h-7 px-2 text-xs"
+                      >
+                        {copiedCurl ? (
+                          <CheckCircle className="h-3 w-3" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
                     <pre className="overflow-x-auto rounded bg-amber-100 p-3 text-xs font-mono whitespace-pre-wrap break-all">
 {`curl -X POST ${refreshUrl} \\
   -H "Content-Type: application/json" \\
@@ -137,7 +162,22 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
           )}
 
           <div className="rounded-lg bg-gray-50 p-4">
-            <h3 className="font-medium text-gray-900">Embed in Markdown</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-gray-900">Embed in Markdown</h3>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(`![${label}](${badgeUrl})`, 'markdown')}
+                className="h-7 px-2"
+              >
+                {copiedMarkdown ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
             <code className="mt-2 block text-sm">
               ![{label}]({badgeUrl})
             </code>
