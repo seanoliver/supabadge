@@ -16,14 +16,6 @@ export const PRESET_METRICS: Record<string, PresetMetric> = {
     requiresTableName: true,
     usesAnonKey: true,
     dynamic: true
-  },
-  users: {
-    label: "Users",
-    endpoint: "/auth/v1/admin/users",
-    description: "Total authenticated users",
-    requiresServiceKey: true,
-    usesAnonKey: false,
-    dynamic: false
   }
 };
 

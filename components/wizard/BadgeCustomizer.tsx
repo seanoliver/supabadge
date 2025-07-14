@@ -1,48 +1,63 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BadgePreview } from "@/components/badge/BadgePreview";
-import { ArrowLeft, Loader2, Copy, CheckCircle } from "lucide-react";
-import { PRESET_METRICS, PRESET_COLORS } from "@/lib/metrics";
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { BadgePreview } from '@/components/badge/BadgePreview'
+import { ArrowLeft, Loader2, Copy, CheckCircle } from 'lucide-react'
+import { PRESET_METRICS } from '@/lib/metrics'
 
 interface BadgeCustomizerProps {
-  onBack: () => void;
+  onBack: () => void
   projectData: {
-    projectUrl: string;
-    anonKey: string;
-    serviceKey: string;
-    metricType: string;
-    tableName?: string;
-  };
+    projectUrl: string
+    anonKey: string
+    serviceKey: string
+    metricType: string
+    tableName?: string
+  }
+}
+
+// Convert table name to Title Case
+function toTitleCase(str: string): string {
+  // Handle schema.table format
+  const tableName = str.includes('.') ? str.split('.').pop() || str : str
+
+  return tableName
+    .split(/[-_\s]+/) // Split on hyphens, underscores, and spaces
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
 }
 
 export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
-  const metric = PRESET_METRICS[projectData.metricType];
-  const [label, setLabel] = useState(metric.label);
-  const [color, setColor] = useState("#3ECF8E");
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState("");
-  const [badgeUrl, setBadgeUrl] = useState("");
-  const [refreshUrl, setRefreshUrl] = useState("");
-  const [hasRLS, setHasRLS] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [copiedCurl, setCopiedCurl] = useState(false);
-  const [copiedMarkdown, setCopiedMarkdown] = useState(false);
+  const metric = PRESET_METRICS[projectData.metricType]
+  // Use Title Case version of table name if available, otherwise use metric label
+  const defaultLabel = projectData.tableName
+    ? toTitleCase(projectData.tableName)
+    : metric.label
+  const [label, setLabel] = useState(defaultLabel)
+  const [color, setColor] = useState('#3ECF8E')
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState('')
+  const [badgeUrl, setBadgeUrl] = useState('')
+  const [refreshUrl, setRefreshUrl] = useState('')
+  const [hasRLS, setHasRLS] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [copiedCurl, setCopiedCurl] = useState(false)
+  const [copiedMarkdown, setCopiedMarkdown] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsCreating(true);
+    e.preventDefault()
+    setError('')
+    setIsCreating(true)
 
     try {
-      const response = await fetch("/api/setup", {
-        method: "POST",
+      const response = await fetch('/api/setup', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           projectUrl: projectData.projectUrl,
@@ -53,46 +68,55 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
           label,
           color,
         }),
-      });
+      })
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create badge");
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to create badge')
       }
 
-      const { badgeId, badgeUrl: url, hasRLS: rlsDetected, refreshUrl: refresh } = await response.json();
-      setBadgeUrl(url);
-      setHasRLS(rlsDetected);
-      
+      const {
+        badgeUrl: url,
+        hasRLS: rlsDetected,
+        refreshUrl: refresh,
+      } = await response.json()
+      setBadgeUrl(url)
+      setHasRLS(rlsDetected)
+
       if (refresh) {
-        setRefreshUrl(refresh);
+        setRefreshUrl(refresh)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create badge");
+      setError(err instanceof Error ? err.message : 'Failed to create badge')
     } finally {
-      setIsCreating(false);
+      setIsCreating(false)
     }
-  };
+  }
 
-  const copyToClipboard = async (text: string, type: 'badge' | 'curl' | 'markdown' = 'badge') => {
-    await navigator.clipboard.writeText(text);
+  const copyToClipboard = async (
+    text: string,
+    type: 'badge' | 'curl' | 'markdown' = 'badge'
+  ) => {
+    await navigator.clipboard.writeText(text)
     if (type === 'badge') {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } else if (type === 'curl') {
-      setCopiedCurl(true);
-      setTimeout(() => setCopiedCurl(false), 2000);
+      setCopiedCurl(true)
+      setTimeout(() => setCopiedCurl(false), 2000)
     } else if (type === 'markdown') {
-      setCopiedMarkdown(true);
-      setTimeout(() => setCopiedMarkdown(false), 2000);
+      setCopiedMarkdown(true)
+      setTimeout(() => setCopiedMarkdown(false), 2000)
     }
-  };
+  }
 
   if (badgeUrl) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Your Badge is Ready!</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Your Badge is Ready!
+          </h2>
           <p className="mt-2 text-gray-600">
             Copy the URL below to embed your badge anywhere
           </p>
@@ -126,21 +150,28 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
               <AlertDescription>
                 <div className="space-y-2">
                   <p className="font-semibold text-amber-900">
-                    {hasRLS ? "RLS-Protected Table" : "Manual Refresh Required"}
+                    {hasRLS ? 'RLS-Protected Table' : 'Manual Refresh Required'}
                   </p>
                   <p className="text-sm text-amber-800">
-                    {hasRLS 
-                      ? "This table has Row Level Security enabled. The badge shows a cached count that must be refreshed manually."
-                      : "User count badges need to be refreshed manually."}
+                    {hasRLS
+                      ? 'This table has Row Level Security enabled. The badge shows a cached count that must be refreshed manually.'
+                      : 'User count badges need to be refreshed manually.'}
                   </p>
                   <div className="mt-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-amber-900">To refresh the count:</p>
+                      <p className="text-sm font-medium text-amber-900">
+                        To refresh the count:
+                      </p>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard(`curl -X POST ${refreshUrl} \\\n  -H "Content-Type: application/json" \\\n  -d '{"serviceKey": "your-service-key"}'`, 'curl')}
+                        onClick={() =>
+                          copyToClipboard(
+                            `curl -X POST ${refreshUrl} \\\n  -H "Content-Type: application/json" \\\n  -d '{"serviceKey": "your-service-key"}'`,
+                            'curl'
+                          )
+                        }
                         className="h-7 px-2 text-xs"
                       >
                         {copiedCurl ? (
@@ -151,7 +182,7 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
                       </Button>
                     </div>
                     <pre className="overflow-x-auto rounded bg-amber-100 p-3 text-xs font-mono whitespace-pre-wrap break-all">
-{`curl -X POST ${refreshUrl} \\
+                      {`curl -X POST ${refreshUrl} \\
   -H "Content-Type: application/json" \\
   -d '{"serviceKey": "your-service-key"}'`}
                     </pre>
@@ -168,7 +199,9 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(`![${label}](${badgeUrl})`, 'markdown')}
+                onClick={() =>
+                  copyToClipboard(`![${label}](${badgeUrl})`, 'markdown')
+                }
                 className="h-7 px-2"
               >
                 {copiedMarkdown ? (
@@ -184,20 +217,19 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
           </div>
         </div>
 
-        <Button
-          onClick={() => window.location.reload()}
-          className="w-full"
-        >
+        <Button onClick={() => window.location.reload()} className="w-full">
           Create Another Badge
         </Button>
       </div>
-    );
+    )
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Customize Your Badge</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Customize Your Badge
+        </h2>
         <p className="mt-2 text-gray-600">
           Personalize the appearance of your badge
         </p>
@@ -266,10 +298,10 @@ export function BadgeCustomizer({ onBack, projectData }: BadgeCustomizerProps) {
               Creating...
             </>
           ) : (
-            "Create Badge"
+            'Create Badge'
           )}
         </Button>
       </div>
     </form>
-  );
+  )
 }
