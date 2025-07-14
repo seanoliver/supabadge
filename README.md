@@ -4,6 +4,8 @@
 ![Support Tickets](https://zdpqxgwvzlspdbfsqxmi.supabase.co/functions/v1/badge/46c9a96a-6f0b-439c-b633-bf9b234ea7ed)
 ![Products](https://zdpqxgwvzlspdbfsqxmi.supabase.co/functions/v1/badge/95bee450-098e-4166-9e5a-8ad473cce33e)
 
+![Supabadge](/public/assets/supabadge-social-share.png)
+
 Create beautiful, live-updating metrics badges for your Supabase projects. Display real-time table counts and statistics in your READMEs, dashboards, and documentation.
 
 ## Features
@@ -41,6 +43,8 @@ Or use HTML for more control:
 ```
 
 ## How It Works
+
+![Screenshot](/public/assets/supabadge-screenshot.png)
 
 Supabadge creates dynamic SVG badges that fetch data from your Supabase project:
 

@@ -19,11 +19,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Supabadge",
+    url: defaultUrl,
+    images: [
+      {
+        url: "/assets/supabadge-social-share.png",
+        width: 1200,
+        height: 630,
+        alt: "Supabadge - Live Metrics Badges for Supabase",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Supabadge - Live Metrics Badges for Supabase",
     description: "Create beautiful, live-updating metrics badges for your Supabase projects",
+    images: ["/assets/supabadge-social-share.png"],
   },
 };
 
