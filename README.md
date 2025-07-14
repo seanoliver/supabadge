@@ -50,7 +50,8 @@ Supabadge creates dynamic SVG badges that fetch data from your Supabase project:
 
 1. **Public Tables**: Badges update automatically using your publishable key
 2. **RLS-Protected Tables**: Initial count is cached during setup, manual refresh available
-3. **Non-Public Schemas**: Always uses cached values (requires secret key for updates)
+
+Note: Non-publich schema badges are currently not supported.
 
 ## Manual Refresh (for RLS-Protected Tables)
 
