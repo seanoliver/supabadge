@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         if (response.ok) {
           const data = await response.json();
           // The OpenAPI spec returns paths which correspond to tables
-          const tables: any[] = [];
+          const tables: { schema: string; table: string; fullName: string }[] = [];
 
           if (data.paths) {
             Object.keys(data.paths).forEach(path => {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
         if (response.ok) {
           const data = await response.json();
-          return (data || []).map((row: any) => ({
+          return (data || []).map((row: { schemaname: string; tablename: string }) => ({
             schema: row.schemaname,
             table: row.tablename,
             fullName: `${row.schemaname}.${row.tablename}`

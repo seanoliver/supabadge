@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, Shield, Zap } from "lucide-react";
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
             </Link>
           </div>
         </nav>
-        
+
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
           <div className="flex flex-col items-center gap-6 text-center pt-20">
             <h1 className="text-4xl font-bold">Live Metrics Badges for Supabase</h1>
