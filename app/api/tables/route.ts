@@ -14,13 +14,13 @@ export async function POST(request: NextRequest) {
     // Use the Supabase Management API to get database information
     // Extract the project ref from the URL
     const projectRef = projectUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-    
+
     if (!projectRef) {
       throw new Error("Invalid project URL format");
     }
 
     // Try multiple approaches to get table information
-    
+
     // Approach 1: Try to use the REST API with a direct query
     const approaches = [
       // Try the SQL endpoint
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
           const data = await response.json();
           // The OpenAPI spec returns paths which correspond to tables
           const tables: any[] = [];
-          
+
           if (data.paths) {
             Object.keys(data.paths).forEach(path => {
               if (path.startsWith('/') && !path.includes('/rpc/')) {
@@ -53,12 +53,12 @@ export async function POST(request: NextRequest) {
               }
             });
           }
-          
+
           return tables;
         }
         throw new Error('Failed to get OpenAPI spec');
       },
-      
+
       // Try a known Supabase internal endpoint
       async () => {
         const response = await fetch(`${projectUrl}/rest/v1/`, {
@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             query: `
-              SELECT schemaname, tablename 
-              FROM pg_catalog.pg_tables 
-              WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'supabase_migrations', 'vault') 
+              SELECT schemaname, tablename
+              FROM pg_catalog.pg_tables
+              WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'supabase_migrations', 'vault')
               ORDER BY schemaname, tablename
             `
           }),
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     // If all approaches fail, return empty array to trigger manual input
     console.log('All approaches to fetch tables failed, returning empty array');
     return NextResponse.json({ tables: [] });
-    
+
   } catch (error) {
     console.error("Error fetching tables:", error);
     return NextResponse.json(
