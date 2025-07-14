@@ -9,8 +9,22 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "Supabadge - Live Metrics Badges for Supabase",
+  description: "Create beautiful, live-updating metrics badges for your Supabase projects. Display table counts and stats in READMEs, dashboards, and more.",
+  keywords: ["supabase", "badge", "metrics", "database", "analytics", "readme", "github"],
+  authors: [{ name: "Supabadge" }],
+  openGraph: {
+    title: "Supabadge - Live Metrics Badges for Supabase",
+    description: "Create beautiful, live-updating metrics badges for your Supabase projects",
+    type: "website",
+    locale: "en_US",
+    siteName: "Supabadge",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Supabadge - Live Metrics Badges for Supabase",
+    description: "Create beautiful, live-updating metrics badges for your Supabase projects",
+  },
 };
 
 const geistSans = Geist({

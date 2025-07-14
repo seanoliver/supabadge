@@ -139,7 +139,7 @@ export function ProjectSetup({ onNext, initialData }: ProjectSetupProps) {
                         <>
                           Find them in your{' '}
                           <a
-                            href={`https://supabase.com/dashboard/project/${projectRef}/settings/api-keys`}
+                            href={`https://supabase.com/dashboard/project/${projectRef}/settings/api-keys/new`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="underline font-medium hover:text-blue-900"
