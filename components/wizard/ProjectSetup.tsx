@@ -67,11 +67,11 @@ export function ProjectSetup({ onNext, initialData }: ProjectSetupProps) {
 
       // For now, just validate the format of the keys
       // The actual validation will happen when we try to fetch tables
-      const isValidPublishableKey = anonKey.startsWith('sb_publishable_') || 
+      const isValidPublishableKey = anonKey.startsWith('sb_publishable_') ||
                                    (anonKey.startsWith('eyJ') && anonKey.length > 40);
-      const isValidSecretKey = serviceKey.startsWith('sb_secret_') || 
+      const isValidSecretKey = serviceKey.startsWith('sb_secret_') ||
                               (serviceKey.startsWith('eyJ') && serviceKey.length > 40);
-      
+
       if (!isValidPublishableKey || !isValidSecretKey) {
         throw new Error('Invalid API key format')
       }
@@ -138,7 +138,7 @@ export function ProjectSetup({ onNext, initialData }: ProjectSetupProps) {
                         <>
                           Find them in your{' '}
                           <a
-                            href={`https://supabase.com/dashboard/project/${projectRef}/settings/api-keys/new`}
+                            href={`https://supabase.com/dashboard/project/${projectRef}/settings/api-keys`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="underline font-medium hover:text-blue-900"
