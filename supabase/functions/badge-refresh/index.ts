@@ -89,9 +89,13 @@ async function fetchTableCount(projectUrl: string, serviceKey: string, tableName
 
   const headers: Record<string, string> = {
     'apikey': serviceKey,
-    'Authorization': `Bearer ${serviceKey}`,
     'Prefer': 'count=exact',
   };
+  
+  // Only add Authorization header for old JWT keys
+  if (!serviceKey.startsWith('sb_secret_')) {
+    headers['Authorization'] = `Bearer ${serviceKey}`;
+  }
 
   if (schema !== 'public') {
     headers['Accept-Profile'] = schema;

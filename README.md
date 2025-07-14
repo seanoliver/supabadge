@@ -1,105 +1,187 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Supabadge
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+![Orders](https://zdpqxgwvzlspdbfsqxmi.supabase.co/functions/v1/badge/b55dd4d9-14b7-4bc1-a8f3-920c62a44a90)
+![Support Tickets](https://zdpqxgwvzlspdbfsqxmi.supabase.co/functions/v1/badge/46c9a96a-6f0b-439c-b633-bf9b234ea7ed)
+![Products](https://zdpqxgwvzlspdbfsqxmi.supabase.co/functions/v1/badge/95bee450-098e-4166-9e5a-8ad473cce33e)
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Create beautiful, live-updating metrics badges for your Supabase projects. Display real-time table counts and statistics in your READMEs, dashboards, and documentation.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- 🚀 **Live Updates** - Badges automatically reflect current data for public tables
+- 🔒 **Secure** - Only stores publishable keys, never your secret keys
+- 🎨 **Customizable** - Choose your badge color and label
+- ⚡ **Fast** - Optimized edge functions serve badges quickly
+- 🔄 **RLS Support** - Manual refresh for tables with Row Level Security
+- 📊 **Any Table** - Track row counts from any table in your database
 
-## Demo
+## Quick Start
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+1. Visit [Supabadge](https://supabadge.vercel.app) (or your deployment URL)
+2. Enter your Supabase project details:
+   - **Project ID**: Found in your Supabase Dashboard → Settings → General
+   - **Publishable Key**: Your `sb_publishable_*` or anon key
+   - **Secret Key**: Your `sb_secret_*` or service role key (used only for setup, never stored)
+3. Select the table you want to track
+4. Customize your badge appearance
+5. Copy the badge URL and add it to your README!
 
-## Deploy to Vercel
+## Example Usage
 
-Vercel deployment will guide you through creating a Supabase account and project.
+Add a badge to your README:
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+```markdown
+![Users](https://your-project.supabase.co/functions/v1/badge/your-badge-id)
+```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+Or use HTML for more control:
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+```html
+<img src="https://your-project.supabase.co/functions/v1/badge/your-badge-id" alt="Users" />
+```
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+## How It Works
 
-## Clone and run locally
+Supabadge creates dynamic SVG badges that fetch data from your Supabase project:
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+1. **Public Tables**: Badges update automatically using your publishable key
+2. **RLS-Protected Tables**: Initial count is cached during setup, manual refresh available
+3. **Non-Public Schemas**: Always uses cached values (requires secret key for updates)
 
-2. Create a Next.js app using the Supabase Starter template npx command
+## Manual Refresh (for RLS-Protected Tables)
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+If your table has Row Level Security or is in a non-public schema, you'll need to refresh the count manually:
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+```bash
+curl -X POST https://your-project.supabase.co/functions/v1/badge-refresh/your-badge-id \
+  -H "Content-Type: application/json" \
+  -d '{"serviceKey": "your-secret-key"}'
+```
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+## API Key Compatibility
 
-3. Use `cd` to change into the app's directory
+Supabadge works with both old and new Supabase API key formats:
+- ✅ New keys: `sb_publishable_*` and `sb_secret_*`
+- ✅ Legacy JWT keys: `eyJ...`
 
-   ```bash
-   cd with-supabase-app
-   ```
+## Development
 
-4. Rename `.env.example` to `.env.local` and update the following:
+### Prerequisites
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
+- Node.js 18+
+- pnpm
+- Supabase project
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+### Setup
 
-5. You can now run the Next.js local development server:
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/supabadge.git
+cd supabadge
+```
 
-   ```bash
-   npm run dev
-   ```
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+```
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+4. Run the development server:
+```bash
+pnpm dev
+```
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+### Project Structure
 
-## Feedback and issues
+```
+supabadge/
+├── app/                    # Next.js app (wizard UI)
+├── components/             # React components
+├── lib/                    # Utilities and helpers
+├── supabase/
+│   └── functions/
+│       ├── badge/         # Badge serving function
+│       └── badge-refresh/ # Manual refresh function
+└── sql/
+    └── schema.sql         # Database schema
+```
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### Database Schema
 
-## More Supabase examples
+```sql
+CREATE TABLE badges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_url TEXT NOT NULL,
+  anon_key TEXT NOT NULL,
+  label TEXT NOT NULL,
+  metric_type TEXT NOT NULL,
+  table_name TEXT,
+  color TEXT DEFAULT '#4F46E5',
+  cached_value TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## Deployment
+
+### Deploy to Vercel
+
+The Next.js UI deploys easily to Vercel:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fsupabadge)
+
+### Deploy Edge Functions
+
+Use the Supabase CLI to deploy edge functions:
+
+```bash
+supabase functions deploy badge
+supabase functions deploy badge-refresh
+```
+
+## Security Considerations
+
+- 🔐 **Secret keys are never stored** - only used during setup
+- 🌐 **Publishable keys only** - safe to store and use in edge functions
+- 🛡️ **CORS enabled** - badges can be embedded anywhere
+- 🚫 **No direct SQL** - uses REST API for all queries
+
+## Troubleshooting
+
+### "Access to schema is forbidden"
+This error occurs when trying to access non-public schemas with a publishable key. Badges for non-public schema tables will always use cached values.
+
+### "Offline" badge
+The badge shows "Offline" when:
+- The Supabase API is unreachable
+- Invalid credentials are provided
+- Rate limits are exceeded
+
+### Badge not updating
+- For public tables: Check that RLS policies allow read access with the anon key
+- For RLS-protected tables: Use the manual refresh endpoint with your secret key
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+## Credits
+
+Built with:
+- [Next.js](https://nextjs.org)
+- [Supabase](https://supabase.com)
+- [Tailwind CSS](https://tailwindcss.com)
+- [shadcn/ui](https://ui.shadcn.com)
+
+---
+
+Made with ❤️ for the Supabase community

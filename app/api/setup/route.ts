@@ -22,25 +22,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Test the connection to the user's Supabase project
-    try {
-      const testUrl = `${projectUrl}/rest/v1/`;
-      const response = await fetch(testUrl, {
-        headers: {
-          'apikey': anonKey,
-          'Authorization': `Bearer ${anonKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        return NextResponse.json(
-          { error: 'Invalid project URL or API key' },
-          { status: 400 }
-        );
-      }
-    } catch {
+    // We'll validate the connection when we actually try to fetch data
+    // For now, just validate the key formats
+    const isValidPublishableKey = anonKey.startsWith('sb_publishable_') || 
+                                 (anonKey.startsWith('eyJ') && anonKey.length > 40);
+    const isValidSecretKey = serviceRoleKey && (serviceRoleKey.startsWith('sb_secret_') || 
+                            (serviceRoleKey.startsWith('eyJ') && serviceRoleKey.length > 40));
+    
+    if (!isValidPublishableKey) {
       return NextResponse.json(
-        { error: 'Failed to connect to Supabase project' },
+        { error: 'Invalid publishable/anon key format' },
         { status: 400 }
       );
     }
@@ -60,46 +51,62 @@ export async function POST(request: NextRequest) {
         table = parts[1];
       }
       
+      // For non-public schemas, we MUST cache the value since anon keys can't access them
+      const isNonPublicSchema = schema !== 'public';
+      
       // Prepare headers
       const anonHeaders: Record<string, string> = {
         'apikey': anonKey,
-        'Authorization': `Bearer ${anonKey}`,
         'Prefer': 'count=exact',
       };
       
-      if (schema !== 'public') {
-        anonHeaders['Accept-Profile'] = schema;
+      // Only add Authorization header for old JWT keys
+      if (!anonKey.startsWith('sb_')) {
+        anonHeaders['Authorization'] = `Bearer ${anonKey}`;
       }
       
-      // First try with anon key to see if we get a count
-      const anonCountUrl = `${projectUrl}/rest/v1/${encodeURIComponent(table)}?select=*`;
-      const anonResponse = await fetch(anonCountUrl, {
-        method: 'HEAD',
-        headers: anonHeaders,
+      // For non-public schemas, skip the anon key check entirely
+      let anonResponse;
+      let anonAccessBlocked = false;
+      let anonCount = 0;
+      
+      if (!isNonPublicSchema) {
+        // Only try with anon key for public schema tables
+        const anonCountUrl = `${projectUrl}/rest/v1/${encodeURIComponent(table)}?select=*`;
+        anonResponse = await fetch(anonCountUrl, {
+          method: 'HEAD',
+          headers: anonHeaders,
+        });
+        
+        anonAccessBlocked = anonResponse.status === 403 || anonResponse.status === 401;
+        const anonContentRange = anonResponse.headers.get('content-range') || '';
+        const anonMatch = anonContentRange.match(/(\d+|\*)\/(\d+)/);
+        anonCount = anonMatch ? parseInt(anonMatch[2], 10) : 0;
+      } else {
+        // For non-public schemas, assume anon access is blocked
+        anonAccessBlocked = true;
+      }
+
+      console.log('Anon key check:', {
+        isNonPublicSchema,
+        anonAccessBlocked,
+        anonCount,
       });
 
-      console.log('Anon key response:', {
-        status: anonResponse.status,
-        headers: Object.fromEntries(anonResponse.headers.entries())
-      });
-
-      // Check if RLS is blocking access entirely (403 or no content-range)
-      const anonAccessBlocked = anonResponse.status === 403 || anonResponse.status === 401;
-      
-      const anonContentRange = anonResponse.headers.get('content-range') || '';
-      const anonMatch = anonContentRange.match(/(\d+|\*)\/(\d+)/);
-      const anonCount = anonMatch ? parseInt(anonMatch[2], 10) : 0;
-      
       // If we get 0 rows with a 200 response, RLS might still be active
-      const possibleRLS = anonCount === 0 && anonResponse.status === 200;
+      const possibleRLS = !isNonPublicSchema && anonCount === 0 && anonResponse?.status === 200;
       
       // If service role key provided, get the actual count
       if (serviceRoleKey) {
         const serviceHeaders: Record<string, string> = {
           'apikey': serviceRoleKey,
-          'Authorization': `Bearer ${serviceRoleKey}`,
           'Prefer': 'count=exact',
         };
+        
+        // Only add Authorization header for old JWT keys
+        if (!serviceRoleKey.startsWith('sb_')) {
+          serviceHeaders['Authorization'] = `Bearer ${serviceRoleKey}`;
+        }
         
         if (schema !== 'public') {
           serviceHeaders['Accept-Profile'] = schema;
@@ -124,12 +131,16 @@ export async function POST(request: NextRequest) {
         // 1. Anon access is blocked (403/401)
         // 2. Counts differ between anon and service keys
         // 3. Anon returns 0 but service returns > 0 (likely RLS filtering all rows)
-        const rlsDetected = anonAccessBlocked || 
+        // 4. Table is in non-public schema (always requires service key)
+        const rlsDetected = isNonPublicSchema ||
+                           anonAccessBlocked || 
                            anonCount !== serviceCount || 
                            (possibleRLS && serviceCount > 0);
         
         console.log('RLS Detection:', {
           table: tableName,
+          schema,
+          isNonPublicSchema,
           anonCount,
           serviceCount,
           anonAccessBlocked,
@@ -137,7 +148,7 @@ export async function POST(request: NextRequest) {
           hasRLS: rlsDetected
         });
         
-        if (rlsDetected) {
+        if (rlsDetected || isNonPublicSchema) {
           hasRLS = true;
           cachedValue = serviceCount.toString();
         }

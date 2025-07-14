@@ -76,9 +76,13 @@ async function fetchTableCount(projectUrl: string, anonKey: string, tableName: s
   // For non-public schemas, we need to set the schema in headers
   const headers: Record<string, string> = {
     'apikey': anonKey,
-    'Authorization': `Bearer ${anonKey}`,
     'Prefer': 'count=exact',
   };
+  
+  // Only add Authorization header for old JWT keys
+  if (!anonKey.startsWith('sb_publishable_')) {
+    headers['Authorization'] = `Bearer ${anonKey}`;
+  }
 
   if (schema !== 'public') {
     headers['Accept-Profile'] = schema;

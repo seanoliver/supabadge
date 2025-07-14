@@ -65,16 +65,15 @@ export function ProjectSetup({ onNext, initialData }: ProjectSetupProps) {
 
       const validProjectUrl = `https://${projectRef}.supabase.co`
 
-      // Test the connection
-      const response = await fetch(`${validProjectUrl}/rest/v1/`, {
-        headers: {
-          apikey: anonKey,
-          Authorization: `Bearer ${anonKey}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Invalid project reference or API keys')
+      // For now, just validate the format of the keys
+      // The actual validation will happen when we try to fetch tables
+      const isValidPublishableKey = anonKey.startsWith('sb_publishable_') || 
+                                   (anonKey.startsWith('eyJ') && anonKey.length > 40);
+      const isValidSecretKey = serviceKey.startsWith('sb_secret_') || 
+                              (serviceKey.startsWith('eyJ') && serviceKey.length > 40);
+      
+      if (!isValidPublishableKey || !isValidSecretKey) {
+        throw new Error('Invalid API key format')
       }
 
       onNext({ projectUrl: validProjectUrl, anonKey, serviceKey })
@@ -161,11 +160,11 @@ export function ProjectSetup({ onNext, initialData }: ProjectSetupProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Label htmlFor="anonKey">Anon (Public) Key</Label>
+                <Label htmlFor="anonKey">Publishable Key (or Anon Key)</Label>
                 <Input
                   id="anonKey"
                   type="text"
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  placeholder="sb_publishable_... or eyJhbGc..."
                   value={anonKey}
                   onChange={(e) => setAnonKey(e.target.value)}
                   required
@@ -182,11 +181,11 @@ export function ProjectSetup({ onNext, initialData }: ProjectSetupProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Label htmlFor="serviceKey">Service Role Key</Label>
+                <Label htmlFor="serviceKey">Secret Key (or Service Role Key)</Label>
                 <Input
                   id="serviceKey"
                   type="password"
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  placeholder="sb_secret_... or eyJhbGc..."
                   value={serviceKey}
                   onChange={(e) => setServiceKey(e.target.value)}
                   required
